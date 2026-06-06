@@ -370,6 +370,42 @@ def write_payload(payload: dict[str, Any], json_path: Path, js_path: Path) -> No
         "window.JOSAA_DATA = " + compact + ";\n",
         encoding="utf-8",
     )
+    write_manifest(json_path.parent)
+
+
+def write_manifest(data_dir: Path) -> None:
+    datasets: list[dict[str, Any]] = []
+    for json_path in sorted(data_dir.glob("josaa-*-round-*.json")):
+        try:
+            payload = json.loads(json_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        source = payload.get("source", {})
+        year = str(source.get("year") or "")
+        round_no = str(source.get("round") or "")
+        if not year or not round_no:
+            continue
+        js_name = f"josaa-{year}-round-{round_no}.js"
+        if not (data_dir / js_name).exists():
+            continue
+        datasets.append(
+            {
+                "year": year,
+                "round": round_no,
+                "label": f"JoSAA {year} Round {round_no}",
+                "script": f"data/{js_name}",
+                "rows": len(payload.get("rows", [])),
+                "fetchedAt": source.get("fetchedAt", ""),
+            }
+        )
+
+    datasets.sort(key=lambda item: (int(item["year"]), int(item["round"])), reverse=True)
+    manifest = "window.JOSAA_DATASETS = " + json.dumps(
+        datasets,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ) + ";\n"
+    (data_dir / "datasets.js").write_text(manifest, encoding="utf-8")
 
 
 def main(argv: list[str]) -> int:

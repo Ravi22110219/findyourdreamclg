@@ -2,10 +2,13 @@
   "use strict";
 
   var state = {
+    datasetCache: {},
+    manifest: [],
     rows: [],
     results: [],
     source: {},
     facets: {},
+    selectedDataset: null,
   };
 
   var els = {};
@@ -60,11 +63,67 @@
     });
   }
 
-  function setupDataset() {
-    var payload = window.JOSAA_DATA;
+  function datasetKey(dataset) {
+    return dataset.year + "-round-" + dataset.round;
+  }
+
+  function setupManifest() {
+    var manifest = Array.isArray(window.JOSAA_DATASETS) ? window.JOSAA_DATASETS : [];
+    if (!manifest.length && window.JOSAA_DATA && window.JOSAA_DATA.source) {
+      manifest = [{
+        year: String(window.JOSAA_DATA.source.year || "2025"),
+        round: String(window.JOSAA_DATA.source.round || "6"),
+        label: "JoSAA " + (window.JOSAA_DATA.source.year || "2025") + " Round " + (window.JOSAA_DATA.source.round || "6"),
+        script: "data/josaa-2025-round-6.js",
+        rows: window.JOSAA_DATA.rows.length,
+        fetchedAt: window.JOSAA_DATA.source.fetchedAt || "",
+      }];
+    }
+    state.manifest = manifest.slice().sort(function (a, b) {
+      return Number(b.year) - Number(a.year) || Number(b.round) - Number(a.round);
+    });
+    return state.manifest.length > 0;
+  }
+
+  function setupYearRoundControls() {
+    var years = [];
+    state.manifest.forEach(function (dataset) {
+      if (years.indexOf(dataset.year) === -1) years.push(dataset.year);
+    });
+    els.yearSelect.innerHTML = "";
+    years.forEach(function (year) {
+      els.yearSelect.appendChild(option(year, year));
+    });
+    fillRoundSelect();
+  }
+
+  function fillRoundSelect() {
+    var year = els.yearSelect.value || (state.manifest[0] && state.manifest[0].year);
+    var rounds = state.manifest
+      .filter(function (dataset) {
+        return dataset.year === year;
+      })
+      .sort(function (a, b) {
+        return Number(b.round) - Number(a.round);
+      });
+    els.roundSelect.innerHTML = "";
+    rounds.forEach(function (dataset) {
+      els.roundSelect.appendChild(option("Round " + dataset.round, dataset.round));
+    });
+  }
+
+  function selectedManifestDataset() {
+    var year = els.yearSelect.value;
+    var round = els.roundSelect.value;
+    return state.manifest.find(function (dataset) {
+      return dataset.year === year && dataset.round === round;
+    }) || state.manifest[0];
+  }
+
+  function setupDataset(payload, selectedDataset) {
     if (!payload || !Array.isArray(payload.rows)) {
       els.datasetPill.textContent = "Dataset not found";
-      els.rankNote.textContent = "Run scripts/fetch_josaa.py to generate data/josaa-2025-round-6.js.";
+      els.rankNote.textContent = "Run scripts/fetch_josaa.py to generate the selected year and round data.";
       els.rankNote.classList.add("error-text");
       return false;
     }
@@ -72,6 +131,8 @@
     state.rows = payload.rows;
     state.source = payload.source || {};
     state.facets = payload.facets || {};
+    state.selectedDataset = selectedDataset || null;
+    state.results = [];
 
     var source = state.source;
     els.datasetPill.textContent = [
@@ -88,9 +149,64 @@
   }
 
   function setupControls() {
-    fillSelect(els.seatTypeSelect, state.facets.seatTypes || [], "", "OPEN");
-    fillSelect(els.quotaSelect, state.facets.quotas || [], "All quotas");
-    fillSelect(els.instituteTypeSelect, state.facets.instituteTypes || [], "All types");
+    var currentSeat = els.seatTypeSelect.value;
+    var currentQuota = els.quotaSelect.value;
+    var currentType = els.instituteTypeSelect.value;
+    var seatTypes = state.facets.seatTypes || [];
+    var quotas = state.facets.quotas || [];
+    var instituteTypes = state.facets.instituteTypes || [];
+    fillSelect(els.seatTypeSelect, seatTypes, "", seatTypes.indexOf(currentSeat) !== -1 ? currentSeat : "OPEN");
+    fillSelect(els.quotaSelect, quotas, "All quotas", quotas.indexOf(currentQuota) !== -1 ? currentQuota : "ALL");
+    fillSelect(els.instituteTypeSelect, instituteTypes, "All types", instituteTypes.indexOf(currentType) !== -1 ? currentType : "ALL");
+  }
+
+  function showDatasetError(dataset) {
+    els.datasetPill.textContent = "Dataset failed";
+    els.rankNote.textContent = "Could not load JoSAA " + dataset.year + " Round " + dataset.round + ". Check that " + dataset.script + " exists.";
+    els.rankNote.classList.add("error-text");
+    state.rows = [];
+    state.results = [];
+    renderResults(currentQuery());
+  }
+
+  function finishDatasetLoad(payload, dataset) {
+    els.rankNote.classList.remove("error-text");
+    if (!setupDataset(payload, dataset)) return;
+    setupControls();
+    var source = state.source || {};
+    if (source.fetchedAt) {
+      els.rankNote.textContent = (source.note || "") + " Data fetched " + formatDate(source.fetchedAt) + ".";
+    }
+    runSearch();
+  }
+
+  function loadDataset(dataset) {
+    if (!dataset) return;
+    var key = datasetKey(dataset);
+    els.datasetPill.textContent = "Loading JoSAA " + dataset.year + " Round " + dataset.round;
+    els.exportButton.disabled = true;
+
+    if (state.datasetCache[key]) {
+      finishDatasetLoad(state.datasetCache[key], dataset);
+      return;
+    }
+
+    var script = document.createElement("script");
+    script.src = dataset.script;
+    script.async = true;
+    script.onload = function () {
+      var payload = window.JOSAA_DATA;
+      if (!payload || !payload.source) {
+        showDatasetError(dataset);
+        return;
+      }
+      state.datasetCache[key] = payload;
+      finishDatasetLoad(payload, dataset);
+    };
+    script.onerror = function () {
+      showDatasetError(dataset);
+    };
+    document.head.appendChild(script);
   }
 
   function parseQuickPaste() {
@@ -240,6 +356,7 @@
 
     els.resultSummary.textContent = [
       "Rank " + query.rank.toLocaleString(),
+      "JoSAA " + (state.source.year || "") + " Round " + (state.source.round || ""),
       titleValue(query.seatType),
       titleValue(query.quota),
       titleValue(query.instituteType),
@@ -344,7 +461,7 @@
     var link = document.createElement("a");
     var source = state.source || {};
     link.href = URL.createObjectURL(blob);
-    link.download = "josaa-matches-" + (source.year || "data") + "-round-" + (source.round || "x") + ".csv";
+    link.download = "findyourdreamclg-" + (source.year || "data") + "-round-" + (source.round || "x") + ".csv";
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -356,6 +473,13 @@
     els.resetButton.addEventListener("click", resetForm);
     els.exportButton.addEventListener("click", exportCsv);
     els.quickPaste.addEventListener("input", parseQuickPaste);
+    els.yearSelect.addEventListener("change", function () {
+      fillRoundSelect();
+      loadDataset(selectedManifestDataset());
+    });
+    els.roundSelect.addEventListener("change", function () {
+      loadDataset(selectedManifestDataset());
+    });
     [
       els.rankInput,
       els.seatTypeSelect,
@@ -396,17 +520,19 @@
       resultsBody: byId("resultsBody"),
       seatTypeSelect: byId("seatTypeSelect"),
       sortSelect: byId("sortSelect"),
+      roundSelect: byId("roundSelect"),
+      yearSelect: byId("yearSelect"),
     };
 
-    if (!setupDataset()) return;
-    setupControls();
-    bind();
-    renderResults(currentQuery());
-
-    var source = state.source || {};
-    if (source.fetchedAt) {
-      els.rankNote.textContent = (source.note || "") + " Data fetched " + formatDate(source.fetchedAt) + ".";
+    if (!setupManifest()) {
+      els.datasetPill.textContent = "No datasets";
+      els.rankNote.textContent = "Run scripts/fetch_josaa.py to generate JoSAA data.";
+      els.rankNote.classList.add("error-text");
+      return;
     }
+    setupYearRoundControls();
+    bind();
+    loadDataset(selectedManifestDataset());
   }
 
   document.addEventListener("DOMContentLoaded", boot);

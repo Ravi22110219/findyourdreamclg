@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>JoSAA Rank Finder</title>
+    <title>FindYourDreamCLg</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <header class="app-header">
       <div>
-        <p class="eyebrow">Opening and closing rank archive</p>
-        <h1>JoSAA Rank Finder</h1>
+        <p class="eyebrow">JoSAA opening and closing rank archive</p>
+        <h1>FindYourDreamCLg</h1>
       </div>
       <div class="dataset-pill" id="datasetPill">Dataset loading</div>
     </header>
@@ -23,6 +23,16 @@
         </div>
 
         <form id="rankForm" class="control-grid">
+          <label class="field" for="yearSelect">
+            <span>Year</span>
+            <select id="yearSelect" name="yearSelect"></select>
+          </label>
+
+          <label class="field" for="roundSelect">
+            <span>Round</span>
+            <select id="roundSelect" name="roundSelect"></select>
+          </label>
+
           <label class="field field-wide" for="quickPaste">
             <span>Paste rank and category</span>
             <input id="quickPaste" name="quickPaste" type="text" autocomplete="off" placeholder="16500 OBC-NCL Female">
@@ -129,7 +139,7 @@
       </section>
     </main>
 
-    <script src="data/josaa-2025-round-6.js"></script>
+    <script src="data/datasets.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

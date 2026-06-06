@@ -1,14 +1,15 @@
-# JoSAA Rank Finder
+# FindYourDreamCLg
 
 Standalone JoSAA opening/closing-rank finder. It lives outside the existing dashboard code and can be opened directly in a browser.
 
 ## Use
 
 1. Open `index.html`.
-2. Enter or paste a rank with category, for example `16500 OBC-NCL Female`.
-3. Filter by quota, institute type, college, or branch.
+2. Select the JoSAA year and round.
+3. Enter or paste a rank with category, for example `16500 OBC-NCL Female`.
+4. Filter by quota, institute type, college, or branch.
 
-The included app uses JoSAA 2025 Round 6 data after running the fetcher below.
+The included app can switch between any generated JoSAA year/round datasets.
 
 ## Refresh Data
 
@@ -21,8 +22,10 @@ The script writes:
 
 - `data/josaa-2025-round-6.json`
 - `data/josaa-2025-round-6.js`
+- `data/datasets.js`
 
-`index.html` loads the `.js` file so it can work from `file://` without a web server.
+`index.html` loads `data/datasets.js` and then loads the selected year/round
+`.js` data file, so it can work from `file://` without a web server.
 
 ## GitHub Pages
 
