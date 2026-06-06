@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JoSAA Rank Finder</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Opening and closing rank archive</p>
+        <h1>JoSAA Rank Finder</h1>
+      </div>
+      <div class="dataset-pill" id="datasetPill">Dataset loading</div>
+    </header>
+
+    <main class="workspace">
+      <section class="query-panel" aria-labelledby="queryTitle">
+        <div class="section-title">
+          <h2 id="queryTitle">Candidate Details</h2>
+          <a href="https://josaa.admissions.nic.in/applicant/seatmatrix/openingclosingrankarchieve.aspx" target="_blank" rel="noreferrer">Official source</a>
+        </div>
+
+        <form id="rankForm" class="control-grid">
+          <label class="field field-wide" for="quickPaste">
+            <span>Paste rank and category</span>
+            <input id="quickPaste" name="quickPaste" type="text" autocomplete="off" placeholder="16500 OBC-NCL Female">
+          </label>
+
+          <label class="field" for="rankInput">
+            <span>Rank</span>
+            <input id="rankInput" name="rankInput" type="number" min="1" step="1" inputmode="numeric" required>
+          </label>
+
+          <label class="field" for="seatTypeSelect">
+            <span>Seat type / category</span>
+            <select id="seatTypeSelect" name="seatTypeSelect"></select>
+          </label>
+
+          <label class="field" for="genderSelect">
+            <span>Gender seat pool</span>
+            <select id="genderSelect" name="genderSelect">
+              <option value="neutral">Gender-Neutral only</option>
+              <option value="female">Female-only + Gender-Neutral</option>
+              <option value="all">All gender rows</option>
+            </select>
+          </label>
+
+          <label class="field" for="quotaSelect">
+            <span>Quota</span>
+            <select id="quotaSelect" name="quotaSelect"></select>
+          </label>
+
+          <label class="field" for="instituteTypeSelect">
+            <span>Institute type</span>
+            <select id="instituteTypeSelect" name="instituteTypeSelect"></select>
+          </label>
+
+          <label class="field" for="instituteSearch">
+            <span>Institute search</span>
+            <input id="instituteSearch" name="instituteSearch" type="search" autocomplete="off" placeholder="IIT Bombay">
+          </label>
+
+          <label class="field" for="programSearch">
+            <span>Branch search</span>
+            <input id="programSearch" name="programSearch" type="search" autocomplete="off" placeholder="Computer Science">
+          </label>
+
+          <label class="field" for="sortSelect">
+            <span>Sort</span>
+            <select id="sortSelect" name="sortSelect">
+              <option value="competitive">Most competitive first</option>
+              <option value="safe">Largest margin first</option>
+              <option value="institute">Institute name</option>
+              <option value="program">Branch name</option>
+            </select>
+          </label>
+
+          <label class="check-field" for="prepCheckbox">
+            <input id="prepCheckbox" name="prepCheckbox" type="checkbox">
+            <span>Include preparatory ranks</span>
+          </label>
+
+          <div class="actions">
+            <button type="submit" class="primary-button">Show Matches</button>
+            <button type="button" id="resetButton" class="secondary-button">Reset</button>
+            <button type="button" id="exportButton" class="secondary-button" disabled>Export CSV</button>
+          </div>
+        </form>
+
+        <p class="rank-note" id="rankNote"></p>
+      </section>
+
+      <section class="results-panel" aria-labelledby="resultsTitle">
+        <div class="section-title">
+          <div>
+            <h2 id="resultsTitle">Eligible Colleges and Branches</h2>
+            <p id="resultSummary">Enter a rank to start.</p>
+          </div>
+          <div class="count-box">
+            <span id="resultCount">0</span>
+            <small>matches</small>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Institute</th>
+                <th>Branch</th>
+                <th>Type</th>
+                <th>Quota</th>
+                <th>Seat</th>
+                <th>Gender</th>
+                <th>Opening</th>
+                <th>Closing</th>
+                <th>Margin</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody">
+              <tr>
+                <td colspan="9" class="empty-state">No query yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="data/josaa-2025-round-6.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
