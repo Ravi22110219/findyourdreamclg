@@ -37,13 +37,31 @@ select {
   justify-content: space-between;
   gap: 24px;
   padding: 28px clamp(18px, 4vw, 48px) 22px;
-  border-bottom: 1px solid var(--line);
-  background: #fbfcfb;
+  border-bottom: 1px solid #1f3440;
+  background: #101d25;
+  color: #fff;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.brand-logo {
+  display: block;
+  width: clamp(170px, 26vw, 320px);
+  height: auto;
+}
+
+.brand-copy {
+  min-width: 0;
 }
 
 .eyebrow {
   margin: 0 0 6px;
-  color: var(--primary);
+  color: #8bd3ff;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -73,10 +91,10 @@ h2 {
   flex: 0 0 auto;
   max-width: 320px;
   padding: 10px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(139, 211, 255, 0.24);
   border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--muted);
+  background: rgba(255, 255, 255, 0.08);
+  color: #d7e9f3;
   font-size: 0.88rem;
   font-weight: 700;
   text-align: right;
@@ -279,7 +297,7 @@ button:disabled {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1040px;
+  min-width: 1160px;
 }
 
 th,
@@ -333,6 +351,39 @@ tbody tr:hover {
   white-space: nowrap;
 }
 
+.suggestion-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+td small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.suggestion-safe {
+  background: #e3f6e8;
+  color: #0d6832;
+}
+
+.suggestion-moderate {
+  background: #fff1cf;
+  color: #7a4a02;
+}
+
+.suggestion-dream {
+  background: #edf0ff;
+  color: #3730a3;
+}
+
 .margin-good {
   color: #0f6b2f;
   font-weight: 850;
@@ -354,6 +405,48 @@ tbody tr:hover {
   color: var(--danger);
 }
 
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px clamp(18px, 4vw, 48px);
+  border-top: 1px solid var(--line);
+  background: #fbfcfb;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.app-footer div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.app-footer strong {
+  color: var(--ink);
+}
+
+.app-footer span {
+  min-width: 0;
+}
+
+.app-footer p {
+  margin: 0;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.app-footer a {
+  color: var(--primary-strong);
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 1050px) {
   .workspace {
     grid-template-columns: 1fr;
@@ -366,6 +459,13 @@ tbody tr:hover {
 
 @media (max-width: 680px) {
   .app-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .brand-lockup,
+  .app-footer,
+  .app-footer div {
     align-items: start;
     flex-direction: column;
   }

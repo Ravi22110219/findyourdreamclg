@@ -12,6 +12,7 @@
   };
 
   var els = {};
+  var MAX_RENDERED_ROWS = 500;
 
   function byId(id) {
     return document.getElementById(id);
@@ -28,6 +29,44 @@
   function asRank(value) {
     var parsed = Number.parseInt(value, 10);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  function dreamGap(rank) {
+    return Math.max(500, Math.min(3000, Math.round(rank * 0.08)));
+  }
+
+  function safeGap(rank) {
+    return Math.max(700, Math.min(6000, Math.round(rank * 0.14)));
+  }
+
+  function suggestionFor(row, query) {
+    var margin = row.closingRank - query.rank;
+    var safe = safeGap(query.rank);
+    var dream = dreamGap(query.rank);
+    var label = "Moderate";
+    var className = "suggestion-moderate";
+    var score = 65;
+
+    if (margin >= safe) {
+      label = "Safe";
+      className = "suggestion-safe";
+      score = Math.min(99, Math.round(78 + Math.min(21, (margin / safe) * 12)));
+    } else if (margin >= 0) {
+      label = "Moderate";
+      className = "suggestion-moderate";
+      score = Math.max(58, Math.round(62 + (margin / safe) * 16));
+    } else {
+      label = "Dream";
+      className = "suggestion-dream";
+      score = Math.max(30, Math.round(58 + (margin / dream) * 28));
+    }
+
+    return {
+      className: className,
+      label: label,
+      margin: margin,
+      score: score,
+    };
   }
 
   function option(label, value) {
@@ -265,7 +304,7 @@
   function rowMatches(row, query) {
     if (row.closingRank == null) return false;
     if (!query.includePreparatory && row.isPreparatory) return false;
-    if (row.closingRank < query.rank) return false;
+    if (row.closingRank < query.rank - (query.includeDream ? dreamGap(query.rank) : 0)) return false;
     if (query.seatType !== "ALL" && row.seatType !== query.seatType) return false;
     if (query.quota !== "ALL" && row.quota !== query.quota) return false;
     if (query.instituteType !== "ALL" && row.instituteType !== query.instituteType) return false;
@@ -275,10 +314,13 @@
     return true;
   }
 
-  function compareResults(sortMode, rank) {
+  function compareResults(sortMode, query) {
     return function (a, b) {
       if (sortMode === "safe") {
-        return (b.closingRank - rank) - (a.closingRank - rank);
+        return (b.closingRank - query.rank) - (a.closingRank - query.rank);
+      }
+      if (sortMode === "suggestion") {
+        return suggestionFor(b, query).score - suggestionFor(a, query).score || a.closingRank - b.closingRank;
       }
       if (sortMode === "institute") {
         return a.institute.localeCompare(b.institute) || a.program.localeCompare(b.program);
@@ -300,6 +342,7 @@
       instituteSearch: normalize(els.instituteSearch.value),
       programSearch: normalize(els.programSearch.value),
       sortMode: els.sortSelect.value,
+      includeDream: els.dreamCheckbox.checked,
       includePreparatory: els.prepCheckbox.checked,
     };
   }
@@ -308,7 +351,7 @@
     els.resultsBody.innerHTML = "";
     var tr = document.createElement("tr");
     var td = document.createElement("td");
-    td.colSpan = 9;
+    td.colSpan = 10;
     td.className = "empty-state";
     td.textContent = message;
     tr.appendChild(td);
@@ -338,6 +381,18 @@
     row.appendChild(td);
   }
 
+  function appendSuggestionCell(row, suggestion) {
+    var td = document.createElement("td");
+    var badge = document.createElement("span");
+    var score = document.createElement("small");
+    badge.className = "suggestion-badge " + suggestion.className;
+    badge.textContent = suggestion.label;
+    score.textContent = suggestion.score + "/100";
+    td.appendChild(badge);
+    td.appendChild(score);
+    row.appendChild(td);
+  }
+
   function renderResults(query) {
     els.resultCount.textContent = state.results.length.toLocaleString();
     els.exportButton.disabled = state.results.length === 0;
@@ -350,7 +405,7 @@
 
     if (!state.results.length) {
       els.resultSummary.textContent = "No matching JoSAA rows for rank " + query.rank.toLocaleString() + ".";
-      clearTable("No eligible rows under the current filters.");
+      clearTable("No suggestions under the current filters.");
       return;
     }
 
@@ -360,14 +415,16 @@
       titleValue(query.seatType),
       titleValue(query.quota),
       titleValue(query.instituteType),
+      query.includeDream ? "Dream suggestions on" : "Dream suggestions off",
     ].join(" / ");
 
     els.resultsBody.innerHTML = "";
-    state.results.slice(0, 500).forEach(function (row) {
+    state.results.slice(0, MAX_RENDERED_ROWS).forEach(function (row) {
       var tr = document.createElement("tr");
-      var margin = row.closingRank - query.rank;
+      var suggestion = suggestionFor(row, query);
       appendCell(tr, row.institute, "institute-cell");
       appendCell(tr, row.program, "branch-cell");
+      appendSuggestionCell(tr, suggestion);
       appendTagCell(tr, row.instituteType);
       appendCell(tr, row.quota);
       appendCell(tr, row.seatType);
@@ -376,18 +433,18 @@
       appendCell(tr, rankText(row.closingRankRaw, row.closingRank));
       appendCell(
         tr,
-        margin.toLocaleString(),
-        margin <= 500 ? "margin-tight" : "margin-good"
+        suggestion.margin.toLocaleString(),
+        suggestion.margin < 0 || suggestion.margin <= 500 ? "margin-tight" : "margin-good"
       );
       els.resultsBody.appendChild(tr);
     });
 
-    if (state.results.length > 500) {
+    if (state.results.length > MAX_RENDERED_ROWS) {
       var tr = document.createElement("tr");
       var td = document.createElement("td");
-      td.colSpan = 9;
+      td.colSpan = 10;
       td.className = "empty-state";
-      td.textContent = "Showing first 500 matches. Use filters to narrow the list.";
+      td.textContent = "Showing first " + MAX_RENDERED_ROWS + " matches. Use filters to narrow the list.";
       tr.appendChild(td);
       els.resultsBody.appendChild(tr);
     }
@@ -407,7 +464,7 @@
       .filter(function (row) {
         return rowMatches(row, query);
       })
-      .sort(compareResults(query.sortMode, query.rank));
+      .sort(compareResults(query.sortMode, query));
 
     renderResults(query);
   }
@@ -431,6 +488,7 @@
 
   function exportCsv() {
     if (!state.results.length) return;
+    var query = currentQuery();
     var headers = [
       "Institute",
       "Institute Type",
@@ -440,10 +498,14 @@
       "Gender",
       "Opening Rank",
       "Closing Rank",
+      "Suggestion",
+      "Suggestion Score",
+      "Margin",
       "Preparatory",
     ];
     var lines = [headers.map(csvEscape).join(",")];
     state.results.forEach(function (row) {
+      var suggestion = suggestionFor(row, query);
       lines.push([
         row.institute,
         row.instituteType,
@@ -453,6 +515,9 @@
         row.gender,
         row.openingRankRaw,
         row.closingRankRaw,
+        suggestion.label,
+        suggestion.score,
+        suggestion.margin,
         row.isPreparatory ? "yes" : "no",
       ].map(csvEscape).join(","));
     });
@@ -489,6 +554,7 @@
       els.instituteSearch,
       els.programSearch,
       els.sortSelect,
+      els.dreamCheckbox,
       els.prepCheckbox,
     ].forEach(function (control) {
       control.addEventListener("change", function () {
@@ -504,6 +570,7 @@
     els = {
       datasetPill: byId("datasetPill"),
       exportButton: byId("exportButton"),
+      dreamCheckbox: byId("dreamCheckbox"),
       genderSelect: byId("genderSelect"),
       instituteSearch: byId("instituteSearch"),
       instituteTypeSelect: byId("instituteTypeSelect"),

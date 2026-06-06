@@ -1,4 +1,4 @@
-# FindYourDreamCLg
+# BidsukRV | FindYourDreamCLg
 
 Standalone JoSAA opening/closing-rank finder. It lives outside the existing dashboard code and can be opened directly in a browser.
 
@@ -8,6 +8,7 @@ Standalone JoSAA opening/closing-rank finder. It lives outside the existing dash
 2. Select the JoSAA year and round.
 3. Enter or paste a rank with category, for example `16500 OBC-NCL Female`.
 4. Filter by quota, institute type, college, or branch.
+5. Use the suggestion badge to separate Safe, Moderate, and Dream options.
 
 The included app can switch between any generated JoSAA year/round datasets.
 
@@ -37,6 +38,7 @@ publishes the static site.
 ## Notes
 
 - Source: <https://josaa.admissions.nic.in/applicant/seatmatrix/openingclosingrankarchieve.aspx>
+- Developed by Bidsuk.tech.
 - OPEN rows use CRL ranks.
 - EWS, OBC-NCL, SC, and ST rows use category ranks.
 - PwD rows use PwD ranks within the respective categories.

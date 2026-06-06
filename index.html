@@ -3,14 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FindYourDreamCLg</title>
+    <title>BidsukRV | FindYourDreamCLg</title>
+    <link rel="icon" href="data/LOGO.png">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <header class="app-header">
-      <div>
-        <p class="eyebrow">JoSAA opening and closing rank archive</p>
-        <h1>FindYourDreamCLg</h1>
+      <div class="brand-lockup">
+        <img class="brand-logo" src="data/LOGO.png" alt="BidsukRV - From Rank to Campus">
+        <div class="brand-copy">
+          <p class="eyebrow">JoSAA opening and closing rank archive</p>
+          <h1>FindYourDreamCLg</h1>
+        </div>
       </div>
       <div class="dataset-pill" id="datasetPill">Dataset loading</div>
     </header>
@@ -80,6 +84,7 @@
           <label class="field" for="sortSelect">
             <span>Sort</span>
             <select id="sortSelect" name="sortSelect">
+              <option value="suggestion">Best suggestions first</option>
               <option value="competitive">Most competitive first</option>
               <option value="safe">Largest margin first</option>
               <option value="institute">Institute name</option>
@@ -90,6 +95,11 @@
           <label class="check-field" for="prepCheckbox">
             <input id="prepCheckbox" name="prepCheckbox" type="checkbox">
             <span>Include preparatory ranks</span>
+          </label>
+
+          <label class="check-field" for="dreamCheckbox">
+            <input id="dreamCheckbox" name="dreamCheckbox" type="checkbox" checked>
+            <span>Include dream suggestions</span>
           </label>
 
           <div class="actions">
@@ -105,7 +115,7 @@
       <section class="results-panel" aria-labelledby="resultsTitle">
         <div class="section-title">
           <div>
-            <h2 id="resultsTitle">Eligible Colleges and Branches</h2>
+            <h2 id="resultsTitle">College Suggestions</h2>
             <p id="resultSummary">Enter a rank to start.</p>
           </div>
           <div class="count-box">
@@ -120,6 +130,7 @@
               <tr>
                 <th>Institute</th>
                 <th>Branch</th>
+                <th>Suggestion</th>
                 <th>Type</th>
                 <th>Quota</th>
                 <th>Seat</th>
@@ -131,13 +142,21 @@
             </thead>
             <tbody id="resultsBody">
               <tr>
-                <td colspan="9" class="empty-state">No query yet.</td>
+                <td colspan="10" class="empty-state">No query yet.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
     </main>
+
+    <footer class="app-footer">
+      <div>
+        <strong>FindYourDreamCLg</strong>
+        <span>Year-wise cutoffs, safety bands, and shortlist exports for JoSAA choices.</span>
+      </div>
+      <p>Developed by <a href="https://bidsuk.tech" target="_blank" rel="noreferrer">Bidsuk.tech</a></p>
+    </footer>
 
     <script src="data/datasets.js"></script>
     <script src="app.js"></script>
